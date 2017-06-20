@@ -1,3 +1,7 @@
+# this file is a fake copy of gpiozero in where you can interact with
+# without the need of having a raspberry-pi while developing the features
+
+
 class PIN:
 
     def __init__(self, pin, *args, **kwars):

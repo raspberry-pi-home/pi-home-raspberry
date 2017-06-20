@@ -49,22 +49,22 @@ class EmptyPin(Pin):
         pass
 
 
-class ActionablePin(Pin):
+class ConfigurablePin(Pin):
 
     def __init__(self, settings):
-        super(ActionablePin, self).__init__(settings)
+        super(ConfigurablePin, self).__init__(settings)
 
         self.label = settings['label']
         self.type = settings['type']
 
     def __str__(self):
         return '{parent_name}({label})'.format(
-            parent_name=super(ActionablePin, self).__str__(),
+            parent_name=super(ConfigurablePin, self).__str__(),
             label=self.label,
         )
 
 
-class InputPin(ActionablePin):
+class InputPin(ConfigurablePin):
 
     def __init__(self, settings):
         super(InputPin, self).__init__(settings)
@@ -98,7 +98,7 @@ class InputPin(ActionablePin):
         pass
 
 
-class OutputPin(ActionablePin):
+class OutputPin(ConfigurablePin):
 
     def __str__(self):
         return '{parent_name} > status: {status}'.format(

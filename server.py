@@ -16,7 +16,10 @@ from app import App
 from config import get_config
 
 
-logging.basicConfig(format='%(asctime)s:%(name)s:%(pathname)s:%(levelname)s: %(message)s', datefmt='%Y-%m-%dT%H:%M:%S%z')
+logging.basicConfig(
+    format='%(asctime)s:%(name)s:%(pathname)s:%(levelname)s: %(message)s',
+    datefmt='%Y-%m-%dT%H:%M:%S%z',
+)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 

@@ -13,4 +13,6 @@ class App:
         self._board.change_pin_status(pin, status)
 
     def get_board_status(self):
+        # TODO: instead of returning this, we should serialize the board and
+        # serialize pins
         return self._board.get_pin_status()
