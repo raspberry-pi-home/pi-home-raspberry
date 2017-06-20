@@ -26,6 +26,27 @@ logger.setLevel(logging.INFO)
 STATIC_FOLDER = os.path.join(os.path.dirname(__file__), './static')
 
 
+async def websocket_message_handler(msg, ws_response, websockets, raspberry_app):
+    logger.info('Got %s message from websocket', msg.data)
+
+    # try to parse the message as json
+    try:
+        data = msg.json()
+    except json.JSONDecodeError:
+        logger.warning('Unable to parse websocket json message')
+
+        # is message is not in a json format, we will do nothing
+        return
+
+    string_data = json.dumps(string_data)
+
+    await ws_response.send_str(string_data + '/answer')
+
+    for ws in websockets:
+        if ws is not ws_response:
+            await ws.send_str(string_data)
+
+
 def json_error(message, status):
     logger.warning('Web server error: http=%s error=%s', status, message)
     return Response(
@@ -54,11 +75,10 @@ async def error_middleware(web_app, handler):
 
 
 async def index_handler(request):
-    # TODO: change this
+    # TODO: this along with /static should serve frontend app
     return Response(text='Hello, world')
 
 
-# TODO: improve this
 async def websocket_handler(request):
     ws_response = WebSocketResponse()
     ok, protocol = ws_response.can_prepare(request)
@@ -69,32 +89,25 @@ async def websocket_handler(request):
     await ws_response.prepare(request)
 
     try:
+        # TODO: remove this piece of code
         print('Someone joined')
         for ws in request.app['websockets']:
             await ws.send_str('Someone joined')
 
         request.app['websockets'].append(ws_response)
 
+        # TODO: I couldn't make this work using .receive() method because
+        # of the middlewares. So, again, does middlewares makes sense for this
+        # project?
         async for msg in ws_response:
+            # we only care about text messages
             if msg.type == WSMsgType.TEXT:
-                # try to parse the message as json
-                try:
-                    data = msg.json()
-                except json.JSONDecodeError:
-                    logger.warning('Unable to parse websocket json message')
-                    # fallback and treat the message as string
-                    data = msg.data
-
-                # TODO: this will likely change since we will receive allways json messages
-                string_data = data
-                if type(string_data) == dict:
-                    string_data = json.dumps(string_data)
-
-                await ws_response.send_str(string_data + '/answer')
-
-                for ws in request.app['websockets']:
-                    if ws is not ws_response:
-                        await ws.send_str(string_data)
+                await websocket_message_handler(
+                    msg,
+                    ws_response,
+                    request.app['websockets'],
+                    request.app['raspberry_app'],
+                )
 
             else:
                 return ws_response
@@ -103,6 +116,8 @@ async def websocket_handler(request):
 
     finally:
         request.app['websockets'].remove(ws_response)
+
+        # TODO: remove this piece of code
         print('Someone disconnected')
         for ws in request.app['websockets']:
             await ws.send_str('Someone disconnected')
@@ -138,6 +153,7 @@ async def init(loop):
 
     logger.info('Starting web server')
     web_app_handler = web_app.make_handler()
+    # TODO: get host and port from app config (?)
     server_generator = loop.create_server(
         web_app_handler,
         host='0.0.0.0',
@@ -149,7 +165,7 @@ async def init(loop):
 
 async def on_shutdown(web_app):
     for ws in web_app['websockets']:
-        await ws.close(code=1001, message='Server shutdown')
+        await ws.close()
 
 
 async def shutdown(server, web_app, web_app_handler):
@@ -158,7 +174,7 @@ async def shutdown(server, web_app, web_app_handler):
     await server.wait_closed()
     logger.info('Stopping web application')
     await web_app.shutdown()
-    await web_app_handler.finish_connections(10.0)
+    await web_app_handler.shutdown(timeout=5.0)
     await web_app.cleanup()
 
 
