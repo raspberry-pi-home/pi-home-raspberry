@@ -1,6 +1,7 @@
 import json
 import logging
 
+
 logger = logging.getLogger(__name__)
 
 flatten = lambda l: [item for sublist in l for item in sublist]

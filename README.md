@@ -5,5 +5,5 @@
 # dependencies
 [aiohttp](http://aiohttp.readthedocs.io/en/stable/)
 
-# dependencies (on the raspberry-pi)
+# dependencies (only for running the project on the raspberry-pi)
 [gpiozero](https://gpiozero.readthedocs.io/en/stable/)
