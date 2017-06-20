@@ -164,6 +164,7 @@ async def init(loop):
 
 
 async def on_shutdown(web_app):
+    logger.info('Closing websocket connections')
     for ws in web_app['websockets']:
         await ws.close()
 
