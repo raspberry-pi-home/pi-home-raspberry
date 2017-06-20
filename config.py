@@ -3,6 +3,7 @@ import logging
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 flatten = lambda l: [item for sublist in l for item in sublist]
 

@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 import os
 import sys
@@ -9,11 +8,11 @@ from aiohttp.web import (
     HTTPException,
     Response,
     WebSocketResponse,
-    WSMsgType,
 )
 
 from app import App
 from config import get_config
+from server_routes import routes
 
 
 logging.basicConfig(
@@ -24,27 +23,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 STATIC_FOLDER = os.path.join(os.path.dirname(__file__), './static')
-
-
-async def websocket_message_handler(msg, ws_response, websockets, raspberry_app):
-    logger.info('Got %s message from websocket', msg.data)
-
-    # try to parse the message as json
-    try:
-        data = msg.json()
-    except json.JSONDecodeError:
-        logger.warning('Unable to parse websocket json message')
-
-        # is message is not in a json format, we will do nothing
-        return
-
-    string_data = json.dumps(string_data)
-
-    await ws_response.send_str(string_data + '/answer')
-
-    for ws in websockets:
-        if ws is not ws_response:
-            await ws.send_str(string_data)
 
 
 def json_error(message, status):
@@ -74,55 +52,6 @@ async def error_middleware(web_app, handler):
     return middleware_handler
 
 
-async def index_handler(request):
-    # TODO: this along with /static should serve frontend app
-    return Response(text='Hello, world')
-
-
-async def websocket_handler(request):
-    ws_response = WebSocketResponse()
-    ok, protocol = ws_response.can_prepare(request)
-    if not ok:
-        # TODO: do something (?)
-        pass
-
-    await ws_response.prepare(request)
-
-    try:
-        # TODO: remove this piece of code
-        print('Someone joined')
-        for ws in request.app['websockets']:
-            await ws.send_str('Someone joined')
-
-        request.app['websockets'].append(ws_response)
-
-        # TODO: I couldn't make this work using .receive() method because
-        # of the middlewares. So, again, does middlewares makes sense for this
-        # project?
-        async for msg in ws_response:
-            # we only care about text messages
-            if msg.type == WSMsgType.TEXT:
-                await websocket_message_handler(
-                    msg,
-                    ws_response,
-                    request.app['websockets'],
-                    request.app['raspberry_app'],
-                )
-
-            else:
-                return ws_response
-
-        return ws_response
-
-    finally:
-        request.app['websockets'].remove(ws_response)
-
-        # TODO: remove this piece of code
-        print('Someone disconnected')
-        for ws in request.app['websockets']:
-            await ws.send_str('Someone disconnected')
-
-
 async def init(loop):
     logger.info('Building configuration')
     config = get_config()
@@ -145,8 +74,8 @@ async def init(loop):
     web_app['websockets'] = []
     web_app['raspberry_app'] = raspberry_app
 
-    web_app.router.add_get('/', index_handler)
-    web_app.router.add_get('/ws', websocket_handler)
+    for route in routes:
+        web_app.router.add_route(route[0], route[1], route[2])
     web_app.router.add_static('/static', STATIC_FOLDER)
 
     web_app.on_shutdown.append(on_shutdown)
