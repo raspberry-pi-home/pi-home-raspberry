@@ -80,7 +80,7 @@ async def websocket_handler(request):
                 # try to parse the message as json
                 try:
                     data = msg.json()
-                except json.decoder.JSONDecodeError:
+                except json.JSONDecodeError:
                     logger.warning('Unable to parse websocket json message')
                     # fallback and treat the message as string
                     data = msg.data
