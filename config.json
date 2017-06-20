@@ -1,0 +1,34 @@
+{
+    "pin_settings": [
+        {
+            "label": "Led 17",
+            "pin": 17,
+            "type": "digital_output"
+        },
+        {
+            "label": "Led 18",
+            "pin": 18,
+            "type": "digital_output"
+        },
+        {
+            "label": "Button 22",
+            "pin": 22,
+            "type": "digital_input"
+        },
+        {
+            "label": "Led 27",
+            "pin": 27,
+            "type": "digital_output"
+        }
+    ],
+    "pin_dependencies": [
+        {
+            "input_pin": 22,
+            "output_pin": 17
+        },
+        {
+            "input_pin": 22,
+            "output_pin": 18
+        }
+    ]
+}
