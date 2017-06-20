@@ -30,14 +30,18 @@ class Pin:
         if type(self) == Pin:
             raise TypeError('\'Pin\' can not be instantiated')
 
-        self.pin_number = settings['pin']
+        self._pin_number = settings['pin']
         self._pin = None
 
     def __str__(self):
         return '{class_name}({pin})'.format(
             class_name=self.__class__.__name__,
-            pin=self.pin_number,
+            pin=self.pin,
         )
+
+    @property
+    def pin(self):
+        return self._pin_number
 
     def configure(self):
         raise NotImplementedError
@@ -78,12 +82,13 @@ class InputPin(ConfigurablePin):
             dependencies=[str(dependency) for dependency in self._dependencies],
         )
 
-    @property
-    def values(self):
-        return self._pin.values
+    # TODO: add this back (?)
+    # @property
+    # def values(self):
+    #     return self._pin.values
 
     def configure(self):
-        self._pin = gpio.Button(self.pin_number)
+        self._pin = gpio.Button(self.pin)
         self._pin.when_pressed = self._pin_pressed
         self._pin.when_released = self._pin_released
 
@@ -117,12 +122,8 @@ class OutputPin(ConfigurablePin):
         else:
             self.off()
 
-    @property
-    def pin(self):
-        return self._pin.pin
-
     def configure(self):
-        self._pin = gpio.LED(self.pin_number)
+        self._pin = gpio.LED(self.pin)
 
     def on(self):
         self._pin.on()

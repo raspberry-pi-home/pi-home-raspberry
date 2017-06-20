@@ -10,7 +10,7 @@ class Board:
         )
 
         # configure pins
-        for _, pin in self._pins.items():
+        for pin in self.pins:
             pin.configure()
 
         # set pin dependencies
@@ -21,12 +21,11 @@ class Board:
 
             input_pin.add_dependency(output_pin)
 
+    @property
+    def pins(self):
+        return [pin_setting for _, pin_setting in self._pins.items()]
+
     def change_pin_status(self, pin, status):
         # TODO: validate pin, status and pin-status relation
         input_pin = self._pins[pin]
         input_pin.value = status
-
-    def get_pin_status(self):
-        # TODO: instead of returning this, we should serialize the board and
-        # serialize pins
-        return [pin_setting for _, pin_setting in self._pins.items()]

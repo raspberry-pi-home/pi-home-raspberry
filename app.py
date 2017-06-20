@@ -1,4 +1,7 @@
+import json
+
 from board import Board
+from encoder import ObjectEncoder
 
 
 class App:
@@ -6,13 +9,15 @@ class App:
     def __init__(self, config):
         self._board = Board(config)
 
+    @property
+    def board(self):
+        return self._board
+
     def excecute_action(self, action):
         pin = action['pin']
         status = action['status']
 
-        self._board.change_pin_status(pin, status)
+        self.board.change_pin_status(pin, status)
 
-    def get_board_status(self):
-        # TODO: instead of returning this, we should serialize the board and
-        # serialize pins
-        return self._board.get_pin_status()
+    def to_json(self):
+        return json.dumps(self, cls=ObjectEncoder)
