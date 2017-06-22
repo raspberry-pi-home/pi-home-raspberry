@@ -11,9 +11,9 @@ class PinFactory:
     @staticmethod
     def create_pin(pin_type, pin_setting):
         if pin_type == config_constants.PIN_TYPE_INPUT_DIGITAL:
-            return InputPin(pin_setting)
+            return DigitalInputPin(pin_setting)
         if pin_type == config_constants.PIN_TYPE_OUTPUT_DIGITAL:
-            return OutputPin(pin_setting)
+            return DigitalOutputPin(pin_setting)
         return EmptyPin(pin_setting)
 
     @staticmethod
@@ -68,16 +68,16 @@ class ConfigurablePin(Pin):
         )
 
 
-class InputPin(ConfigurablePin):
+class DigitalInputPin(ConfigurablePin):
 
     def __init__(self, settings):
-        super(InputPin, self).__init__(settings)
+        super(DigitalInputPin, self).__init__(settings)
 
         self._dependencies = []
 
     def __str__(self):
         return '{parent_name} > status: {status} > dependencies: {dependencies}'.format(
-            parent_name=super(InputPin, self).__str__(),
+            parent_name=super(DigitalInputPin, self).__str__(),
             status=self.values,
             dependencies=[str(dependency) for dependency in self._dependencies],
         )
@@ -103,11 +103,11 @@ class InputPin(ConfigurablePin):
         pass
 
 
-class OutputPin(ConfigurablePin):
+class DigitalOutputPin(ConfigurablePin):
 
     def __str__(self):
         return '{parent_name} > status: {status}'.format(
-            parent_name=super(OutputPin, self).__str__(),
+            parent_name=super(DigitalOutputPin, self).__str__(),
             status=self.value,
         )
 
