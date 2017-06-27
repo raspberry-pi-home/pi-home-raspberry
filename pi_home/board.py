@@ -1,4 +1,4 @@
-from pi_home.pins import PinFactory
+from pins import PinFactory
 
 
 class Board:

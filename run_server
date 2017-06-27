@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python pi_home/server.py

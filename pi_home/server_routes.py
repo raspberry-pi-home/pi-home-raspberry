@@ -2,6 +2,7 @@ import json
 import logging
 
 from aiohttp.web import (
+    Response,
     WebSocketResponse,
     WSMsgType,
 )
@@ -9,6 +10,11 @@ from aiohttp.web import (
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+
+async def index_handler(request):
+    # TODO: this along with /static should serve frontend app
+    return Response(text='Hello, world')
 
 
 async def notify_active_connections(websockets):
@@ -108,5 +114,6 @@ async def websocket_handler(request):
         await notify_active_connections(websockets)
 
 routes = [
-    ('GET', '/ws', websocket_handler)
+    ('GET', '/', index_handler),
+    ('GET', '/ws', websocket_handler),
 ]

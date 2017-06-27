@@ -1,9 +1,9 @@
 try:
     import gpiozero as gpio
 except Exception:
-    import pi_home.gpiomock as gpio
+    import gpiomock as gpio
 
-import pi_home.config as config_constants
+import config as config_constants
 
 
 class PinFactory:

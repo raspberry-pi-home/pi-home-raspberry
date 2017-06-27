@@ -1,7 +1,7 @@
 import json
 
-from pi_home.board import Board
-from pi_home.encoder import ObjectEncoder
+from board import Board
+from encoder import ObjectEncoder
 
 
 class App:

@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 
 
 logger = logging.getLogger(__name__)
@@ -130,7 +131,8 @@ def _verify_pin_dependencies(pin_dependencies, pin_settings):
 
 def get_config():
     try:
-        with open('./config.json', encoding='utf-8-sig') as json_file:
+        config_file = os.path.join(os.path.dirname(__file__), '../config.json')
+        with open(config_file, encoding='utf-8-sig') as json_file:
             # read config file
             try:
                 config = json.load(json_file)
