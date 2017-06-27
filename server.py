@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import shutil
 import sys
 
 from aiohttp.web import (
@@ -10,9 +11,9 @@ from aiohttp.web import (
     WebSocketResponse,
 )
 
-from app import App
-from config import get_config
-from server_routes import routes
+from pi_home.app import App
+from pi_home.config import get_config
+from pi_home.server_routes import routes
 
 
 logging.basicConfig(
@@ -22,7 +23,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-STATIC_FOLDER = os.path.join(os.path.dirname(__file__), './static')
+statics = os.path.join(os.path.dirname(__file__), './static')
 
 
 def json_error(message, status):
@@ -76,7 +77,8 @@ async def init(loop):
 
     for route in routes:
         web_app.router.add_route(route[0], route[1], route[2])
-    web_app.router.add_static('/static', STATIC_FOLDER)
+    # web_app.router.add_static('/static', statics)
+    web_app.router.add_static('/', statics)
 
     web_app.on_shutdown.append(on_shutdown)
 
@@ -110,6 +112,17 @@ async def shutdown(server, web_app, web_app_handler):
 
 if __name__ == '__main__':
     logger.info('Starting application')
+
+    # logger.info('Cleaning up folders')
+    # folder_exists = os.path.isdir('static')
+    # if folder_exists:
+    #     shutil.rmtree('static')
+    # os.mkdir('static')
+    # os.system('rm -rf pi-home-frontend/build')
+
+    # logger.info('Building frontend app')
+    # os.system('cd pi-home-frontend; npm run build;')
+    # os.system('cp -R pi-home-frontend/build/ ./static/')
 
     loop = asyncio.get_event_loop()
     server_generator, web_app_handler, web_app = loop.run_until_complete(init(loop))

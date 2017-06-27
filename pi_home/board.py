@@ -1,4 +1,4 @@
-from pins import PinFactory
+from pi_home.pins import PinFactory
 
 
 class Board:
@@ -25,7 +25,13 @@ class Board:
     def pins(self):
         return [pin_setting for _, pin_setting in self._pins.items()]
 
-    def change_pin_status(self, pin, status):
-        # TODO: validate pin, status and pin-status relation
-        input_pin = self._pins[pin]
-        input_pin.value = status
+    def set_pin_value(self, pin, value):
+        if not pin or not value:
+            # TODO: return an error or something
+            return
+
+        # only we are suppose to change output pins
+        output_pin = self._pins[int(pin)]
+        print(output_pin)
+        output_pin.value = value
+        print(output_pin)

@@ -2,7 +2,6 @@ import json
 import logging
 
 from aiohttp.web import (
-    Response,
     WebSocketResponse,
     WSMsgType,
 )
@@ -10,11 +9,6 @@ from aiohttp.web import (
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-
-async def index_handler(request):
-    # TODO: this along with /static should serve frontend app
-    return Response(text='Hello, world')
 
 
 async def notify_active_connections(websockets):
@@ -47,14 +41,18 @@ async def websocket_message_handler(msg, ws_response, websockets, raspberry_app)
         # is message is not in a json format, we will do nothing
         return
 
-    # TODO: implement this for realz
-    string_data = json.dumps(data)
-
-    await ws_response.send_str(string_data + '/answer')
-
-    for ws in websockets:
-        if ws is not ws_response:
-            await ws.send_str(string_data)
+    should_notify_self, should_notify_others = raspberry_app.excecute_action(data)
+    # notify changes in the raspberry app
+    if should_notify_others:
+        await notify_app_changes(
+            websockets,
+            raspberry_app,
+        )
+    elif should_notify_self:
+        await notify_app_changes(
+            [ws_response],
+            raspberry_app,
+        )
 
 
 async def websocket_handler(request):
@@ -110,6 +108,5 @@ async def websocket_handler(request):
         await notify_active_connections(websockets)
 
 routes = [
-    ('GET', '/', index_handler),
     ('GET', '/ws', websocket_handler)
 ]
