@@ -1,6 +1,13 @@
 import asyncio
 import logging
 import sys
+from socket import (
+    AF_INET,
+    SO_BROADCAST,
+    SOCK_DGRAM,
+    SOL_SOCKET,
+    socket,
+)
 
 from aiohttp.web import (
     Application,
@@ -9,15 +16,11 @@ from aiohttp.web import (
     WebSocketResponse,
 )
 
-from app import App
-from config import get_config
-from server_routes import routes
+from pi_home.app import App
+from pi_home.config import get_config
+from pi_home.server_routes import routes
 
 
-logging.basicConfig(
-    format='%(asctime)s:%(name)s:%(pathname)s:%(levelname)s: %(message)s',
-    datefmt='%Y-%m-%dT%H:%M:%S%z',
-)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -49,7 +52,25 @@ async def error_middleware(web_app, handler):
     return middleware_handler
 
 
-async def init(loop):
+async def init_broadcast_socket(port):
+    fake_socket = socket(AF_INET, SOCK_DGRAM)
+    fake_socket.connect(('8.8.8.8', 80))
+    my_ip = fake_socket.getsockname()[0]
+    fake_socket.close()
+
+    logger.info('Starting broadcast socket on: %s:%s', my_ip, port)
+    udp_socket = socket(AF_INET, SOCK_DGRAM)
+    udp_socket.bind(('', 50000))
+    udp_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
+
+    while True:
+        data = '{}:{}:{}'.format('pi-home', my_ip, port)
+        udp_socket.sendto(data.encode('utf-8'), (my_ip, 50000))
+        logger.info('Sent service announcement')
+        await asyncio.sleep(2)
+
+
+async def init_server(host, port, loop):
     logger.info('Building configuration')
     config = get_config()
     if not config:
@@ -79,13 +100,13 @@ async def init(loop):
     logger.info('Starting web server')
     web_app_handler = web_app.make_handler()
     # TODO: get host and port from app config (?)
-    server_generator = loop.create_server(
+    web_server_generator = loop.create_server(
         web_app_handler,
-        host='0.0.0.0',
-        port=8000,
+        host=host,
+        port=port,
     )
 
-    return server_generator, web_app_handler, web_app
+    return web_server_generator, web_app_handler, web_app
 
 
 async def on_shutdown(web_app):
@@ -94,22 +115,29 @@ async def on_shutdown(web_app):
         await ws.close()
 
 
-async def shutdown(server, web_app, web_app_handler):
+async def shutdown(server, web_app, web_app_handler, broadcast_socket_generator):
     logger.info('Stopping main server')
     server.close()
     await server.wait_closed()
+    logger.info('Stopping broadcast socket')
+    broadcast_socket_generator.cancel()
     logger.info('Stopping web application')
     await web_app.shutdown()
     await web_app_handler.shutdown(timeout=5.0)
     await web_app.cleanup()
 
 
-if __name__ == '__main__':
+def main():
     logger.info('Starting application')
 
+    host = '0.0.0.0'
+    port = 8000
+
     loop = asyncio.get_event_loop()
-    server_generator, web_app_handler, web_app = loop.run_until_complete(init(loop))
-    server = loop.run_until_complete(server_generator)
+    server_generator = init_server(host, port, loop)
+    web_server_generator, web_app_handler, web_app = loop.run_until_complete(server_generator)
+    server = loop.run_until_complete(web_server_generator)
+    broadcast_socket_generator = asyncio.ensure_future(init_broadcast_socket(port))
 
     logger.info('Starting web server: %s', str(server.sockets[0].getsockname()))
     try:
@@ -117,7 +145,7 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         logger.info('Stopping application')
     finally:
-        loop.run_until_complete(shutdown(server, web_app, web_app_handler))
+        loop.run_until_complete(shutdown(server, web_app, web_app_handler, broadcast_socket_generator))
         loop.close()
 
     logger.info('Applicaion stopped')
