@@ -1,13 +1,6 @@
 import asyncio
 import logging
 import sys
-from socket import (
-    AF_INET,
-    SO_BROADCAST,
-    SOCK_DGRAM,
-    SOL_SOCKET,
-    socket,
-)
 
 from aiohttp.web import (
     Application,
@@ -50,24 +43,6 @@ async def error_middleware(web_app, handler):
                 return json_error(ex.reason, ex.status)
             raise
     return middleware_handler
-
-
-async def init_broadcast_socket(port):
-    fake_socket = socket(AF_INET, SOCK_DGRAM)
-    fake_socket.connect(('8.8.8.8', 80))
-    my_ip = fake_socket.getsockname()[0]
-    fake_socket.close()
-
-    logger.info('Starting broadcast socket on: %s:%s', my_ip, port)
-    udp_socket = socket(AF_INET, SOCK_DGRAM)
-    udp_socket.bind(('', 50000))
-    udp_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
-
-    while True:
-        data = '{}:{}:{}'.format('pi-home', my_ip, port)
-        udp_socket.sendto(data.encode('utf-8'), (my_ip, 50000))
-        logger.info('Sent service announcement')
-        await asyncio.sleep(2)
 
 
 async def init_server(host, port, loop):
@@ -115,12 +90,10 @@ async def on_shutdown(web_app):
         await ws.close()
 
 
-async def shutdown(server, web_app, web_app_handler, broadcast_socket_generator):
+async def shutdown(server, web_app, web_app_handler):
     logger.info('Stopping main server')
     server.close()
     await server.wait_closed()
-    logger.info('Stopping broadcast socket')
-    broadcast_socket_generator.cancel()
     logger.info('Stopping web application')
     await web_app.shutdown()
     await web_app_handler.shutdown(timeout=5.0)
@@ -137,7 +110,6 @@ def main():
     server_generator = init_server(host, port, loop)
     web_server_generator, web_app_handler, web_app = loop.run_until_complete(server_generator)
     server = loop.run_until_complete(web_server_generator)
-    broadcast_socket_generator = asyncio.ensure_future(init_broadcast_socket(port))
 
     logger.info('Starting web server: %s', str(server.sockets[0].getsockname()))
     try:
@@ -145,7 +117,7 @@ def main():
     except KeyboardInterrupt:
         logger.info('Stopping application')
     finally:
-        loop.run_until_complete(shutdown(server, web_app, web_app_handler, broadcast_socket_generator))
+        loop.run_until_complete(shutdown(server, web_app, web_app_handler))
         loop.close()
 
     logger.info('Applicaion stopped')
