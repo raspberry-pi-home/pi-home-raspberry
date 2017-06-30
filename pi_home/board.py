@@ -1,4 +1,13 @@
-from pi_home.pins import PinFactory
+import logging
+
+from pi_home.pins import (
+    DigitalOutputPin,
+    PinFactory,
+)
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class Board:
@@ -26,12 +35,30 @@ class Board:
         return [pin_setting for _, pin_setting in self._pins.items()]
 
     def set_pin_value(self, pin, value):
-        if not pin or not value:
-            # TODO: return an error or something
-            return
+        if not pin:
+            return False
+
+        if not isinstance(value, bool):
+            return False
+
+        # validate pin
+        try:
+            pin = int(pin)
+        except ValueError:
+            return False
+
+        # validate pin range
+        try:
+            output_pin = self._pins[pin]
+        except KeyError:
+            return False
 
         # only we are suppose to change output pins
-        output_pin = self._pins[int(pin)]
-        print(output_pin)
+        if not isinstance(output_pin, DigitalOutputPin):
+            return False
+
+        logger.info('Previous pin value: %s', output_pin)
         output_pin.value = value
-        print(output_pin)
+        logger.info('New pin value: %s', output_pin)
+
+        return True

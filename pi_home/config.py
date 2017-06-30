@@ -6,6 +6,9 @@ import os
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+BASE_PATH = os.path.dirname(__file__)
+CONFIG_FILE = os.path.join(BASE_PATH, '../config.json')
+
 flatten = lambda l: [item for sublist in l for item in sublist]
 
 # required props
@@ -131,9 +134,8 @@ def _verify_pin_dependencies(pin_dependencies, pin_settings):
 
 def get_config():
     try:
-        config_file = os.path.join(os.path.dirname(__file__), '../config.json')
-        with open(config_file, encoding='utf-8-sig') as json_file:
-            # read config file
+        # read config file
+        with open(CONFIG_FILE, encoding='utf-8-sig') as json_file:
             try:
                 config = json.load(json_file)
             except json.decoder.JSONDecodeError:

@@ -2,19 +2,25 @@ import json
 import logging
 
 from aiohttp.web import (
-    Response,
     WebSocketResponse,
     WSMsgType,
 )
+import aiohttp_jinja2
 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
+@aiohttp_jinja2.template('index.html')
 async def index_handler(request):
-    # TODO: this along with /static should serve frontend app
-    return Response(text='Hello, world')
+    raspberry_app = request.app['raspberry_app']
+
+    return {
+        'host_ip': raspberry_app.host_ip,
+        'host_name': raspberry_app.host_name,
+        'host_port': raspberry_app.host_port,
+    }
 
 
 async def notify_active_connections(websockets):

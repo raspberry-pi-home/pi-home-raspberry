@@ -2,12 +2,15 @@ import asyncio
 import logging
 import sys
 
+
 from aiohttp.web import (
     Application,
     HTTPException,
     Response,
     WebSocketResponse,
 )
+import aiohttp_jinja2
+import jinja2
 
 from pi_home.app import App
 from pi_home.config import get_config
@@ -55,7 +58,7 @@ async def init_server(host, port, loop):
     logger.info('App configuration: %s', config)
 
     logger.info('Building application')
-    raspberry_app = App(config)
+    raspberry_app = App(config, port)
 
     logger.info('Building web application')
     web_app = Application(
@@ -66,6 +69,11 @@ async def init_server(host, port, loop):
     )
     web_app['websockets'] = []
     web_app['raspberry_app'] = raspberry_app
+
+    aiohttp_jinja2.setup(
+        web_app,
+        loader=jinja2.PackageLoader('pi_home', 'templates'),
+    )
 
     for route in routes:
         web_app.router.add_route(route[0], route[1], route[2])
