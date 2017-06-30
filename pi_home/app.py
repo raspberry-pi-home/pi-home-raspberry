@@ -60,6 +60,7 @@ class App:
             return False, not len(errors)
 
         # TODO: implement other cases
+        return False, False
 
     def to_json(self):
         return json.dumps(self, cls=ObjectEncoder)
