@@ -45,8 +45,6 @@ class TestApp(TestCase):
         self.app = App(self.config, 1234)
 
     def test_create_app(self):
-        for pin in self.app.board.pins:
-            print(pin)
         self.assertIsNotNone(self.app)
 
     def test_set_value(self):
