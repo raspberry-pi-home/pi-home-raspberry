@@ -13,7 +13,7 @@ flatten = lambda l: [item for sublist in l for item in sublist]
 
 # required props
 PIN_SETTINGS_REQUIRED_PROPERTIES = ('label', 'pin', 'type')
-PIN_DEPENDENCIES_REQUIRED_PROPERTIES = ('input_pin', 'output_pin')
+PIN_DEPENDENCIES_REQUIRED_PROPERTIES = ('input_pin', 'output_pin', 'type')
 
 # available pins
 GPIO2 = 2
@@ -47,6 +47,10 @@ GPIO27 = 27
 PIN_TYPE_INPUT_DIGITAL = 'digital_input'
 PIN_TYPE_OUTPUT_DIGITAL = 'digital_output'
 
+# available pin dependency types
+PIN_DEPENDENCY_TYPE_TOGGLE = 'toggle'
+PIN_DEPENDENCY_TYPE_DIRECT = 'direct'
+
 # available input pin types
 AVAILABLE_PIN_TYPE_INPUT = tuple(
     v for k, v in locals().items() if k.startswith('PIN_TYPE_INPUT_'),
@@ -55,6 +59,11 @@ AVAILABLE_PIN_TYPE_INPUT = tuple(
 # available output pin types
 AVAILABLE_PIN_TYPE_OUTPUT = tuple(
     v for k, v in locals().items() if k.startswith('PIN_TYPE_OUTPUT_'),
+)
+
+# available dependency types
+AVAILABLE_PIN_DEPENDENCY_TYPE = tuple(
+    v for k, v in locals().items() if k.startswith('PIN_DEPENDENCY_TYPE_'),
 )
 
 # available pins
@@ -120,6 +129,9 @@ def _verify_pin_dependencies(pin_dependencies, pin_settings):
             return
         if pin_dependency['output_pin'] not in AVAILABLE_PINS:
             logger.error('Pin \'%s\' out of range for pin_dependencies configuration: %s', pin_dependency['output_pin'], pin_dependency)
+            return
+        if pin_dependency['type'] not in AVAILABLE_PIN_DEPENDENCY_TYPE:
+            logger.error('Invalid dependency type \'%s\' for pin_dependencies configuration: %s', pin_dependency['type'], pin_dependency)
             return
         if pin_settings[pin_dependency['input_pin']]['type'] not in AVAILABLE_PIN_TYPE_INPUT:
             logger.error('Input pin \'%s\' is not configured as an input for pin_dependencies configuration: %s', pin_dependency['input_pin'], pin_dependency)

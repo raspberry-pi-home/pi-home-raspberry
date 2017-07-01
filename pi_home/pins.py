@@ -1,3 +1,4 @@
+from addict import Dict
 try:
     import gpiozero as gpio
 except Exception:
@@ -73,34 +74,45 @@ class DigitalInputPin(ConfigurablePin):
     def __init__(self, settings):
         super(DigitalInputPin, self).__init__(settings)
 
-        self._dependencies = []
+        self._dependencies = Dict({
+            config_constants.PIN_DEPENDENCY_TYPE_TOGGLE: [],
+            config_constants.PIN_DEPENDENCY_TYPE_DIRECT: [],
+        })
 
     def __str__(self):
+        dependency_str = '\'{type_1}\': {dependencies_1}, \'{type_2}\': {dependencies_2}'.format(
+            type_1=config_constants.PIN_DEPENDENCY_TYPE_TOGGLE,
+            dependencies_1=[str(dependency) for dependency in self._dependencies[config_constants.PIN_DEPENDENCY_TYPE_TOGGLE]],
+            type_2=config_constants.PIN_DEPENDENCY_TYPE_DIRECT,
+            dependencies_2=[str(dependency) for dependency in self._dependencies[config_constants.PIN_DEPENDENCY_TYPE_DIRECT]],
+        )
         return '{parent_name} > status: {status} > dependencies: {dependencies}'.format(
             parent_name=super(DigitalInputPin, self).__str__(),
             status=self.values,
-            dependencies=[str(dependency) for dependency in self._dependencies],
+            dependencies=dependency_str,
         )
 
-    # TODO: add this back (?)
-    # @property
-    # def values(self):
-    #     return self._pin.values
+    @property
+    def values(self):
+        return self._pin.values
 
     def configure(self):
         self._pin = gpio.Button(self.pin)
         self._pin.when_pressed = self._pin_pressed
         self._pin.when_released = self._pin_released
 
-    def add_dependency(self, output_pin):
-        self._dependencies.append(output_pin)
+    def add_dependency(self, output_pin, dependency_type):
+        self._dependencies[dependency_type].append(output_pin)
 
     def _pin_pressed(self):
-        for dependency in self._dependencies:
+        for dependency_type, dependency in self._dependencies[config_constants.PIN_DEPENDENCY_TYPE_TOGGLE]:
             dependency.toggle()
+        for dependency_type, dependency in self._dependencies[config_constants.PIN_DEPENDENCY_TYPE_DIRECT]:
+            dependency.on()
 
     def _pin_released(self):
-        pass
+        for dependency_type, dependency in self._dependencies[config_constants.PIN_DEPENDENCY_TYPE_DIRECT]:
+            dependency.off()
 
 
 class DigitalOutputPin(ConfigurablePin):

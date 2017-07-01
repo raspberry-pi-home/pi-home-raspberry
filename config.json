@@ -16,19 +16,21 @@
             "type": "digital_input"
         },
         {
-            "label": "Led 27",
+            "label": "Button 27",
             "pin": 27,
-            "type": "digital_output"
+            "type": "digital_input"
         }
     ],
     "pin_dependencies": [
         {
             "input_pin": 22,
-            "output_pin": 17
+            "output_pin": 17,
+            "type": "toggle"
         },
         {
-            "input_pin": 22,
-            "output_pin": 18
+            "input_pin": 27,
+            "output_pin": 18,
+            "type": "direct"
         }
     ]
 }

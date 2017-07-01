@@ -27,8 +27,9 @@ class Board:
         for pin_dependency in pin_dependencies:
             input_pin = self._pins[pin_dependency['input_pin']]
             output_pin = self._pins[pin_dependency['output_pin']]
+            dependency_type = pin_dependency['type']
 
-            input_pin.add_dependency(output_pin)
+            input_pin.add_dependency(output_pin, dependency_type)
 
     @property
     def pins(self):

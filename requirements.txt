@@ -1,2 +1,3 @@
+addict
 aiohttp
 aiohttp_jinja2
