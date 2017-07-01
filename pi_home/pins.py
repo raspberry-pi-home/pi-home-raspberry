@@ -105,13 +105,13 @@ class DigitalInputPin(ConfigurablePin):
         self._dependencies[dependency_type].append(output_pin)
 
     def _pin_pressed(self):
-        for dependency_type, dependency in self._dependencies[config_constants.PIN_DEPENDENCY_TYPE_TOGGLE]:
+        for dependency in self._dependencies[config_constants.PIN_DEPENDENCY_TYPE_TOGGLE]:
             dependency.toggle()
-        for dependency_type, dependency in self._dependencies[config_constants.PIN_DEPENDENCY_TYPE_DIRECT]:
+        for dependency in self._dependencies[config_constants.PIN_DEPENDENCY_TYPE_DIRECT]:
             dependency.on()
 
     def _pin_released(self):
-        for dependency_type, dependency in self._dependencies[config_constants.PIN_DEPENDENCY_TYPE_DIRECT]:
+        for dependency in self._dependencies[config_constants.PIN_DEPENDENCY_TYPE_DIRECT]:
             dependency.off()
 
 
