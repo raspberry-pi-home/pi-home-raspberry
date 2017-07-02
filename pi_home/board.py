@@ -39,6 +39,7 @@ class Board:
         if not pin:
             return False
 
+        # validate value
         if not isinstance(value, bool):
             return False
 
