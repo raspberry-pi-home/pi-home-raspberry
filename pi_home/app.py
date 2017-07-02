@@ -57,7 +57,7 @@ class App:
                 if not self.board.set_pin_value(key, value):
                     errors.append(0)
 
-            return False, not len(errors)
+            return False, len(errors) == 0
 
         # TODO: implement other cases
         return False, False

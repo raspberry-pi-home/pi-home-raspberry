@@ -1,4 +1,3 @@
-from addict import Dict
 try:
     import gpiozero as gpio
 except Exception:
@@ -74,10 +73,9 @@ class DigitalInputPin(ConfigurablePin):
     def __init__(self, settings):
         super(DigitalInputPin, self).__init__(settings)
 
-        self._dependencies = Dict({
-            config_constants.PIN_DEPENDENCY_TYPE_TOGGLE: [],
-            config_constants.PIN_DEPENDENCY_TYPE_DIRECT: [],
-        })
+        self._dependencies = {}
+        self._dependencies[config_constants.PIN_DEPENDENCY_TYPE_TOGGLE] = []
+        self._dependencies[config_constants.PIN_DEPENDENCY_TYPE_DIRECT] = []
 
     def __str__(self):
         dependency_str = '\'{type_1}\': {dependencies_1}, \'{type_2}\': {dependencies_2}'.format(
