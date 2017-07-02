@@ -1,5 +1,7 @@
 # pi-home
 
+[![Build Status](https://travis-ci.org/gingrassia/pi-home.svg?branch=master)](https://travis-ci.org/gingrassia/pi-home)
+
 Home Automation solution for Raspberry Pi using Python >= 3.5
 
 ### Dependencies
