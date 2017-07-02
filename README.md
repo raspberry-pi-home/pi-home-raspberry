@@ -22,6 +22,7 @@ pip install -r requirements-raspberry.txt
 
 python run_server.py
 ```
+
 Then go to [raspberry-pi's ip on port 8000](http://localhost:8000) to see instructions to connect to the server and start playing with it
 
 Note: if you don't install `gpiozero`, a mock version of it will be used so gpio ports of the raspberry-pi won't work (this is very useful for developing in a computer)
