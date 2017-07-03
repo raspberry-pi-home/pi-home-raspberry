@@ -23,6 +23,7 @@ async def index_handler(request):
     }
 
 
+# TODO: does this make sense?
 async def notify_active_connections(websockets):
 
     # gather connections and send them to all websockets
