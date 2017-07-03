@@ -1,8 +1,11 @@
 language: python
 python:
-  - "3.5"
-  - "3.6"
+- '3.5'
+- '3.6'
 install:
-  - pip install -r requirements.txt
+- pip install -r requirements.txt
 script:
-  - python -m unittest
+- python -m unittest
+notifications:
+  slack:
+    secure: O1y+L9BfHQ9l4XrTHsrAyI76amdXAubW6UjMyBF2qszPk9U/Bg7JaHIq5qmbObOBCV0ZSDfRXiV7NrItseQGuQ24Dq/MYeptfpuNCXBF1TCFwA8ZM0sg3ZBXzLhTmI8ZkCKPVqrGCLPDmvU+GaeEHptj39l0eFTu+qr1DyH146KRjoOqfVDO9D/Ej9SaR+6tooUQxrOF7MSlo7oaTbFIYcVDeocP98O6b7hqSHUd4sVb2fpQYX6I/r/QgM9TyD5EDyWYm7dWUBuII0Io5GFriAC6F2EDVzR7HTOHZZq1astPO26haTl0i1QCHWlu2DDjVwOMOLGTOSU2TpywTCVRDSPVAnjo7N/8Kkt43UbVHVfZ+ky6Eq2SW5HrEu/R+NqZQ91nQCuBVkUCiV4Z9siNKQOMgA2MNVYfjJHSqG1WAeoBqyTNfe8HRi01uxkqC6Xrw45eXsVPc3y5B0oH8nUTlr1/+VM2R6qV3mSOSGlESGyk9cFv8wYyAWEl7hVcXq6PlW+3R+LP+RNeZPwctUBnDuK6ta8AJrUiA0imyo72+Q8MiXKLaw3jfflQyDN5iVX2qeOce1CrRCTzowTlFhxRZEG0pgFWXJncGYafnnhhF2w/0fBqwcHacKJcIYy3YMk91iv4wQXwbIh+psLkxaWYMVw3z4qpSlW30kPepNZF1pM=
