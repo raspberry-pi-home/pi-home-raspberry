@@ -47,20 +47,22 @@ class App:
     def host_port(self):
         return self._port
 
-    def excecute_action(self, action):
-        # first return value is if we have to notify ourselves about the changes
-        # second return value is if we have to notify others about the changes
-        # errors means no notifying
-        if 'set_value' in action:
-            errors = []
-            for key, value in action['set_value'].items():
-                if not self.board.set_pin_value(key, value):
-                    errors.append(0)
+    def process_message(self, message):
+        if 'action' not in message:
+            return False, False
 
-            return False, len(errors) == 0
+        if 'data' not in message:
+            return False, False
 
-        # TODO: implement other cases
-        return False, False
+        action_key = 'action_{action_name}'.format(
+            action_name=message['action'],
+        )
+        if not hasattr(self.board, action_key):
+            return False, False
+
+        data = message['data']
+        method = getattr(self.board, action_key)
+        return method(data)
 
     def to_json(self):
         return json.dumps(self, cls=ObjectEncoder)

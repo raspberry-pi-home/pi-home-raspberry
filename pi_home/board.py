@@ -35,32 +35,41 @@ class Board:
     def pins(self):
         return [pin_setting for _, pin_setting in self._pins.items()]
 
-    def set_pin_value(self, pin, value):
+    def action_set_value(self, data):
+        if 'pin' not in data:
+            return False, False
+
+        if 'value' not in data:
+            return False, False
+
+        pin = data['pin']
+        value = data['value']
+
         if not pin:
-            return False
+            return False, False
 
         # validate value
         if not isinstance(value, bool):
-            return False
+            return False, False
 
         # validate pin
         try:
             pin = int(pin)
         except ValueError:
-            return False
+            return False, False
 
         # validate pin range
         try:
             output_pin = self._pins[pin]
         except KeyError:
-            return False
+            return False, False
 
         # only we are suppose to change output pins
         if not isinstance(output_pin, DigitalOutputPin):
-            return False
+            return False, False
 
         logger.info('Previous pin value: %s', output_pin)
         output_pin.value = value
         logger.info('New pin value: %s', output_pin)
 
-        return True
+        return False, True

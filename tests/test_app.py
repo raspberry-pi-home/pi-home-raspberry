@@ -50,19 +50,23 @@ class TestApp(TestCase):
     def test_set_value(self):
         self.assertEqual(self.app.board._pins[2].value, False)
 
-        should_notify_self, should_notify_others = self.app.excecute_action({
-            "set_value": {
-                2: True
-            }
+        should_notify_self, should_notify_others = self.app.process_message({
+            "action": "set_value",
+            "data": {
+                "pin": 2,
+                "value": True,
+            },
         })
         self.assertFalse(should_notify_self)
         self.assertTrue(should_notify_others)
         self.assertEqual(self.app.board._pins[2].value, True)
 
-        should_notify_self, should_notify_others = self.app.excecute_action({
-            "set_value": {
-                2: False
-            }
+        should_notify_self, should_notify_others = self.app.process_message({
+            "action": "set_value",
+            "data": {
+                "pin": 2,
+                "value": False,
+            },
         })
         self.assertFalse(should_notify_self)
         self.assertTrue(should_notify_others)

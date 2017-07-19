@@ -54,7 +54,7 @@ async def websocket_message_handler(msg, ws_response, websockets, raspberry_app)
         # is message is not in a json format, we will do nothing
         return
 
-    should_notify_self, should_notify_others = raspberry_app.excecute_action(data)
+    should_notify_self, should_notify_others = raspberry_app.process_message(data)
     # notify changes in the raspberry app
     if should_notify_others:
         await notify_app_changes(
