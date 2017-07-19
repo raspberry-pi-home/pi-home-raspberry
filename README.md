@@ -29,7 +29,7 @@ Then go to [raspberry-pi's ip on port 8000](http://localhost:8000) to see instru
 
 Note: if you don't install `gpiozero`, a mock version of it will be used so gpio ports of the raspberry-pi won't work (this is very useful for developing in a computer)
 
-### Unit tests
+### Unit tests
 
 ```sh
 cd pi-home
