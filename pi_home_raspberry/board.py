@@ -1,6 +1,6 @@
 import logging
 
-from pi_home.pins import (
+from pi_home_raspberry.pins import (
     DigitalOutputPin,
     PinFactory,
 )

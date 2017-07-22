@@ -17,7 +17,7 @@ Home Automation solution for Raspberry Pi using Python >= 3.5
 ```sh
 git clone https://github.com/raspberry-pi-home/pi-home.git
 
-cd pi-home
+cd pi-home-raspberry
 
 pip install -r requirements.txt
 pip install -r requirements-raspberry.txt
@@ -32,7 +32,7 @@ Note: if you don't install `gpiozero`, a mock version of it will be used so gpio
 ### Unit tests
 
 ```sh
-cd pi-home
+cd pi-home-raspberry
 
 python -m unittest
 ```

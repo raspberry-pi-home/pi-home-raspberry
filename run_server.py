@@ -19,6 +19,6 @@ if not py3:
     sys.exit()
 
 
-from pi_home import pi_home
+from pi_home_raspberry import pi_home_raspberry
 
-pi_home()
+pi_home_raspberry()

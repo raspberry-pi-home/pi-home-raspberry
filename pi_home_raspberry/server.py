@@ -12,9 +12,9 @@ from aiohttp.web import (
 import aiohttp_jinja2
 import jinja2
 
-from pi_home.app import App
-from pi_home.config import get_config
-from pi_home.server_routes import routes
+from pi_home_raspberry.app import App
+from pi_home_raspberry.config import get_config
+from pi_home_raspberry.server_routes import routes
 
 
 logger = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ async def init_server(host, port, loop):
 
     aiohttp_jinja2.setup(
         web_app,
-        loader=jinja2.PackageLoader('pi_home', 'templates'),
+        loader=jinja2.PackageLoader('pi_home_raspberry', 'templates'),
     )
 
     for route in routes:

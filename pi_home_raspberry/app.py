@@ -7,8 +7,8 @@ from socket import (
     socket,
 )
 
-from pi_home.board import Board
-from pi_home.encoder import ObjectEncoder
+from pi_home_raspberry.board import Board
+from pi_home_raspberry.encoder import ObjectEncoder
 
 
 logger = logging.getLogger(__name__)

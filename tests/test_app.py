@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from pi_home.app import App
+from pi_home_raspberry.app import App
 
 
 class TestApp(TestCase):
