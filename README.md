@@ -1,6 +1,6 @@
 # pi-home
 
-[![Build Status](https://travis-ci.org/gingrassia/pi-home.svg?branch=master)](https://travis-ci.org/gingrassia/pi-home)
+[![Build Status](https://travis-ci.org/raspberry-pi-home/pi-home-raspberry.svg?branch=master)](https://travis-ci.org/raspberry-pi-home/pi-home-raspberry)
 
 Home Automation solution for Raspberry Pi using Python >= 3.5
 
@@ -15,7 +15,7 @@ Home Automation solution for Raspberry Pi using Python >= 3.5
 ### Usage
 
 ```sh
-git clone https://github.com/gingrassia/pi-home.git
+git clone https://github.com/raspberry-pi-home/pi-home.git
 
 cd pi-home
 
