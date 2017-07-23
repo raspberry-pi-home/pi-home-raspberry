@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import sys
 
 
@@ -112,7 +113,7 @@ def main():
     logger.info('Starting application')
 
     host = '0.0.0.0'
-    port = 8000
+    port = os.environ.get('PORT', 8000)
 
     loop = asyncio.get_event_loop()
     server_generator = init_server(host, port, loop)
