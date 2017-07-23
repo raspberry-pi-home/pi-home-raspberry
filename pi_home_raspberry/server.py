@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 import sys
 
 
@@ -49,7 +48,7 @@ async def error_middleware(web_app, handler):
     return middleware_handler
 
 
-async def init_server(host, port, loop):
+async def init_server(loop):
     logger.info('Building configuration')
     config = get_config()
     if not config:
@@ -57,6 +56,9 @@ async def init_server(host, port, loop):
         sys.exit()
 
     logger.info('App configuration: %s', config)
+
+    host = config['app_settings']['host']
+    port = config['app_settings']['port']
 
     logger.info('Building application')
     raspberry_app = App(config, port)
@@ -83,7 +85,6 @@ async def init_server(host, port, loop):
 
     logger.info('Starting web server')
     web_app_handler = web_app.make_handler()
-    # TODO: get host and port from app config (?)
     web_server_generator = loop.create_server(
         web_app_handler,
         host=host,
@@ -112,11 +113,8 @@ async def shutdown(server, web_app, web_app_handler):
 def main():
     logger.info('Starting application')
 
-    host = '0.0.0.0'
-    port = os.environ.get('PORT', 8000)
-
     loop = asyncio.get_event_loop()
-    server_generator = init_server(host, port, loop)
+    server_generator = init_server(loop)
     web_server_generator, web_app_handler, web_app = loop.run_until_complete(server_generator)
     server = loop.run_until_complete(web_server_generator)
 

@@ -144,6 +144,15 @@ def _verify_pin_dependencies(pin_dependencies, pin_settings):
     return True
 
 
+def _verify_auth_token(auth_token):
+    if not auth_token:
+        logger.error('Please provide an \'AUTH_TOKEN\'')
+        return
+
+    # return True if everythig went ok
+    return True
+
+
 def get_config():
     try:
         # read config file
@@ -174,8 +183,21 @@ def get_config():
     if not _verify_pin_dependencies(pin_dependencies, all_pin_settings):
         return
 
+    # verify auth_token
+    auth_token = os.environ.get('AUTH_TOKEN')
+    if not _verify_auth_token(auth_token):
+        return
+
+    # build app_settings
+    app_settings = {
+        'auth_token': auth_token,
+        'host': '0.0.0.0',
+        'port': os.environ.get('PORT', 8000),
+    }
+
     # build result object
     result = {}
+    result['app_settings'] = app_settings
     result['pin_settings'] = all_pin_settings
     result['pin_dependencies'] = pin_dependencies
 
