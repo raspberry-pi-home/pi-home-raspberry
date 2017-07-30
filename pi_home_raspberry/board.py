@@ -40,9 +40,10 @@ class Board:
         if not pin:
             return False
 
-        value = data.get('value')
-        if not value:
+        # value is boolean, so be careful
+        if 'value' not in data:
             return False
+        value = data.get('value')
 
         # validate pin
         try:
