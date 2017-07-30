@@ -8,7 +8,6 @@ from aiohttp.web import (
     WSMsgType,
 )
 import aiohttp_jinja2
-import bcrypt
 import ujson
 
 
