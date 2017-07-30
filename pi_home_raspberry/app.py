@@ -47,22 +47,32 @@ class App:
     def host_port(self):
         return self._port
 
-    def process_message(self, message):
-        if 'action' not in message:
-            return False, False
+    def process_message(self, message, client):
+        action_name = message.get('action')
+        if not action_name:
+            return None, False
 
-        if 'data' not in message:
-            return False, False
+        data = message.get('data')
+        if not data:
+            return action_name, False
 
         action_key = 'action_{action_name}'.format(
-            action_name=message['action'],
+            action_name=action_name,
         )
-        if not hasattr(self.board, action_key):
-            return False, False
+        method = getattr(self.board, action_key, None)
+        if not method:
+            return action_name, False
 
-        data = message['data']
-        method = getattr(self.board, action_key)
-        return method(data)
+        logger.info('Processing \'%s\' action', action_name)
+        success = False
+        try:
+            success = method(action_name, data, message, client)
+        except Exception as e:
+            logger.error('There was an error excecuting \'%s\'. Error: %s', action_name, e)
+            pass
+
+        logger.info('Action \'%s\' end %s', action_name, 'successfully' if success else 'with failure')
+        return action_name, success
 
     def to_json(self):
         return json.dumps(self, cls=ObjectEncoder)
