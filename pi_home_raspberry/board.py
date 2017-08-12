@@ -35,7 +35,7 @@ class Board:
     def pins(self):
         return [pin_setting for _, pin_setting in self._pins.items()]
 
-    def action_set_value(self, action, data, message, client):
+    def set_value(self, data):
         pin = data.get('pin')
         if not pin:
             return False

@@ -59,7 +59,7 @@ class App:
         action_key = 'action_{action_name}'.format(
             action_name=action_name,
         )
-        method = getattr(self.board, action_key, None)
+        method = getattr(self, action_key, None)
         if not method:
             return action_name, False
 
@@ -73,6 +73,22 @@ class App:
 
         logger.info('Action \'%s\' end %s', action_name, 'successfully' if success else 'with failure')
         return action_name, success
+
+    def action_set_value(self, action, data, message, client):
+        success = self.board.set_value(data)
+
+        if success:
+            return self.action_get_board_status(action, data, message, client)
+
+        return success
+
+    def action_get_board_status(self, action, data, message, client):
+        client.send_json({
+            'action': 'board_status',
+            'data': self.to_json(),
+        })
+
+        return True
 
     def to_json(self):
         return json.dumps(self, cls=ObjectEncoder)

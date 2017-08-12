@@ -3,37 +3,45 @@ import logging
 import sys
 
 
-from aiohttp.web import (
-    Application,
-    HTTPException,
-    Response,
-    WebSocketResponse,
-)
-import aiohttp_jinja2
-import jinja2
+import aiohttp
+from aiohttp.web import WSMsgType
 
 from pi_home_raspberry.app import App
 from pi_home_raspberry.config import get_config
-from pi_home_raspberry.server_routes import routes
 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def json_error(message, status):
-    logger.warning('Web server error: http=%s error=%s', status, message)
-    return Response(
-        status=status,
-        text='There was an error executing your request',
-    )
+async def _websocket_message_handler(msg, ws_response, raspberry_app):
+    logger.info('Got %s message from server', msg.data)
+
+    # try to parse the message as json
+    try:
+        data = msg.json()
+    except json.JSONDecodeError:
+        logger.warning('Unable to parse websocket json message')
+
+        # is message is not in a json format, we will do nothing
+        return ws_response
+
+    action, status = raspberry_app.process_message(data, ws_response)
+
+    # respond with the status of the message
+    # ws_response.send_json({
+    #     'action': '{action}_{status}'.format(
+    #         action=action,
+    #         status='ok' if bool(status) else 'not_ok',
+    #     )
+    # })
 
 
 async def init_server(loop):
     logger.info('Building configuration')
     config = get_config()
     if not config:
-        logger.info('Applicaion terminated')
+        logger.info('Application terminated')
         sys.exit()
 
     logger.info('App configuration: %s', config)
@@ -44,48 +52,38 @@ async def init_server(loop):
     logger.info('Building application')
     raspberry_app = App(config, port)
 
-    logger.info('Building web application')
-    web_app = Application(
-        loop=loop,
-    )
-    web_app['websockets'] = []
-    web_app['raspberry_app'] = raspberry_app
+    ws_server_url = config['app_settings']['ws_server_url']
+    auth_token = config['app_settings']['auth_token']
 
-    aiohttp_jinja2.setup(
-        web_app,
-        loader=jinja2.PackageLoader('pi_home_raspberry', 'templates'),
-    )
+    session = aiohttp.ClientSession()
+    while True:
+        logger.info('Trying to connect to websocket server')
+        try:
+            async with session.ws_connect(ws_server_url) as ws_response:
+                logger.info('Connected to websocket server')
 
-    for route in routes:
-        web_app.router.add_route(route[0], route[1], route[2])
+                logger.info('Autheticating against websocket server')
+                ws_response.send_json({
+                    'action': 'connect',
+                    'data': {
+                        'auth_token': auth_token,
+                        'role': 'raspberry',
+                    },
+                })
 
-    web_app.on_shutdown.append(on_shutdown)
-
-    logger.info('Starting web server')
-    web_app_handler = web_app.make_handler()
-    web_server_generator = loop.create_server(
-        web_app_handler,
-        host=host,
-        port=port,
-    )
-
-    return web_server_generator, web_app_handler, web_app
-
-
-async def on_shutdown(web_app):
-    logger.info('Closing websocket connections')
-    for ws in web_app['websockets']:
-        await ws.close()
-
-
-async def shutdown(server, web_app, web_app_handler):
-    logger.info('Stopping main server')
-    server.close()
-    await server.wait_closed()
-    logger.info('Stopping web application')
-    await web_app.shutdown()
-    await web_app_handler.shutdown(timeout=5.0)
-    await web_app.cleanup()
+                async for msg in ws_response:
+                    logger.info('message!')
+                    # we only care about text messages
+                    if msg.type == WSMsgType.TEXT:
+                        await _websocket_message_handler(
+                            msg,
+                            ws_response,
+                            raspberry_app,
+                        )
+        except Exception as e:
+            logger.info('Disconnected from websocket server')
+            # wait 5 seconds before retry
+            await asyncio.sleep(5)
 
 
 def main():
@@ -93,16 +91,13 @@ def main():
 
     loop = asyncio.get_event_loop()
     server_generator = init_server(loop)
-    web_server_generator, web_app_handler, web_app = loop.run_until_complete(server_generator)
-    server = loop.run_until_complete(web_server_generator)
+    loop.run_until_complete(server_generator)
 
-    logger.info('Starting web server: %s', str(server.sockets[0].getsockname()))
     try:
         loop.run_forever()
     except KeyboardInterrupt:
         logger.info('Stopping application')
     finally:
-        loop.run_until_complete(shutdown(server, web_app, web_app_handler))
         loop.close()
 
-    logger.info('Applicaion stopped')
+    logger.info('Application stopped')
