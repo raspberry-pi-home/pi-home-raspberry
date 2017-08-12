@@ -193,6 +193,7 @@ def get_config():
         'auth_token': auth_token,
         'host': '0.0.0.0',
         'port': os.environ.get('PORT', 8000),
+        'ws_server_url': os.environ.get('WS_SERVER_URL', 'wss://pi-home.herokuapp.com/ws'),
     }
 
     # build result object

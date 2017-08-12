@@ -29,25 +29,6 @@ def json_error(message, status):
     )
 
 
-# TODO: does this makes sense on a websocket
-async def error_middleware(web_app, handler):
-    async def middleware_handler(request):
-        try:
-            response = await handler(request)
-            # TODO: ?
-            # we don't care about WebSocketResponse (for now)
-            if isinstance(response, WebSocketResponse):
-                return response
-            if response.status == 200:
-                return response
-            return json_error(response.message, response.status)
-        except HTTPException as ex:
-            if ex.status != 200:
-                return json_error(ex.reason, ex.status)
-            raise
-    return middleware_handler
-
-
 async def init_server(loop):
     logger.info('Building configuration')
     config = get_config()
@@ -66,9 +47,6 @@ async def init_server(loop):
     logger.info('Building web application')
     web_app = Application(
         loop=loop,
-        middlewares=[
-            error_middleware,
-        ],
     )
     web_app['websockets'] = []
     web_app['raspberry_app'] = raspberry_app

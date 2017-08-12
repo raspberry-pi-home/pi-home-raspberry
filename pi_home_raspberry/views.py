@@ -98,9 +98,6 @@ class WebSocketView(View):
             # notify about active connections
             await _notify_active_connections(websockets)
 
-            # TODO: I couldn't make this work using .receive() method because
-            # of the middlewares. So, again, does middlewares makes sense for this
-            # project?
             async for msg in ws_response:
                 # we only care about text messages
                 if msg.type == WSMsgType.TEXT:
