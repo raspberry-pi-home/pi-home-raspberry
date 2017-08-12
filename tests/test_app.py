@@ -3,6 +3,12 @@ from unittest import TestCase
 from pi_home_raspberry.app import App
 
 
+class FakeClient:
+
+    def send_json(self, data):
+        pass
+
+
 class TestApp(TestCase):
 
     def setUp(self):
@@ -43,7 +49,7 @@ class TestApp(TestCase):
             ]
         }
         self.app = App(self.config, 1234)
-        self.client = None
+        self.client = FakeClient()
 
     def test_create_app(self):
         self.assertIsNotNone(self.app)
