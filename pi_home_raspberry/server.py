@@ -72,7 +72,6 @@ async def init_server(loop):
                 })
 
                 async for msg in ws_response:
-                    logger.info('message!')
                     # we only care about text messages
                     if msg.type == WSMsgType.TEXT:
                         await _websocket_message_handler(
