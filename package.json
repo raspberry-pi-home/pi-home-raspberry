@@ -44,6 +44,7 @@
     "morgan": "^1.10.0"
   },
   "scripts": {
+    "start": "npm run build:js:babel && node lib/server.js",
     "lint": "eslint 'src/**/*.{js,ts,tsx}'",
     "type-check": "tsc --noEmit",
     "type-check:watch": "npm run type-check -- --watch",
