@@ -1,6 +1,16 @@
 const {name: libraryName} = require('./package.json');
+const WebpackShellPlugin = require('webpack-shell-plugin');
 
 const outputFile = (mode) => mode === 'production' ? `${libraryName}.min.js` : `${libraryName}.js`;
+const plugins = () => {
+  if (process.env.NODE_ENV === 'development') {
+    return [
+      new WebpackShellPlugin({
+        onBuildEnd: ['npm run start:dev']
+      })
+    ];
+  }
+}
 
 module.exports = (env, argv) => ({
   entry: `${__dirname}/src/index`,
@@ -22,5 +32,6 @@ module.exports = (env, argv) => ({
       exclude: /node_modules/,
       loader: 'babel-loader'
     }]
-  }
+  },
+  plugins: plugins()
 });
