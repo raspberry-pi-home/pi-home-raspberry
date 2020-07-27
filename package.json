@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git+https://github.com/raspberry-pi-home/pi-home-raspberry.git"
   },
-  "main": "lib/pi-home-raspberry.min.js",
+  "main": "lib/pi-home-raspberry.js",
   "types": "lib/pi-home-raspberry.d.ts",
   "bin": "./bin/pi-home-raspberry.js",
   "engines": {
