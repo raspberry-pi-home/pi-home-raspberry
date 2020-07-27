@@ -1,7 +1,7 @@
 import express from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
-import { Board, validateConfig } from 'pi-home-core'
+import { Board } from 'pi-home-core'
 
 export const server = () => {
   // app setup
@@ -44,7 +44,7 @@ export const server = () => {
   // create a device
   app.post('/api/devices', (req, res) => {
     const device = {
-      pin: req.body.pin,
+      pin: +req.body.pin,
       label: req.body.label,
       type: req.body.type,
     }
@@ -54,9 +54,8 @@ export const server = () => {
       dependencies: db.get('dependencies').value(),
     }
 
-    const error = validateConfig(config)
-
-    if (error) {
+    const [valid, error] = board.validateConfig(config)
+    if (!valid) {
       throw new Error(error)
     }
 
@@ -64,31 +63,17 @@ export const server = () => {
 
     db.get('devices').push(device).write()
 
-    // TODO get device from board?
-    res.json(device)
+    res.json(board.device(+req.body.pin))
   })
 
   // get a device
   app.get('/api/devices/:pin', (req, res) => {
-    const device = db.get('devices').find({ pin: +req.params.pin }).value()
-
-    // TODO verify this
-    if (!!!device) {
-      throw new Error('Device not found')
-    }
-
-    //TODO get device from board?
-    res.json(device)
+    res.json(board.device(+req.params.pin))
   })
 
   // modify a device
   app.put('/api/devices/:pin', (req, res) => {
-    let device = db.get('devices').find({ pin: +req.params.pin }).value()
-
-    // TODO verify this
-    if (!!!device) {
-      throw new Error('Device not found')
-    }
+    let device = board.device(+req.params.pin)
 
     device = {
       pin: device.pin,
@@ -96,15 +81,16 @@ export const server = () => {
       type: req.body.type,
     }
 
-    // TODO merge device
+    // @ts-ignore TS7006
+    const devices = db.get('devices').filter(dbDevice => dbDevice.pin !== device.pin).value()
+
     const config = {
-      devices: [...db.get('devices').value(), device],
+      devices: [...devices, device],
       dependencies: db.get('dependencies').value(),
     }
 
-    const error = validateConfig(config)
-
-    if (error) {
+    const [valid, error] = board.validateConfig(config)
+    if (!valid) {
       throw new Error(error)
     }
 
@@ -115,28 +101,23 @@ export const server = () => {
       .assign({ label: device.label, type: device.type })
       .write()
 
-    // TODO get device from board?
-    res.json(device)
+    res.json(board.device(device.pin))
   })
 
   // delete a device
   app.delete('/api/devices/:pin', (req, res) => {
-    const device = db.get('devices').find({ pin: +req.params.pin }).value()
+    const device = board.device(+req.params.pin)
 
-    // TODO verify this
-    if (!!!device) {
-      throw new Error('Device not found')
-    }
+    // @ts-ignore TS7006
+    const devices = db.get('devices').filter(dbDevice => dbDevice.pin !== device.pin).value()
 
-    // TODO remove device
     const config = {
-      devices: [...db.get('devices').value(), device],
+      devices,
       dependencies: db.get('dependencies').value(),
     }
 
-    const error = validateConfig(config)
-
-    if (error) {
+    const [valid, error] = board.validateConfig(config)
+    if (!valid) {
       throw new Error(error)
     }
 
@@ -144,23 +125,13 @@ export const server = () => {
 
     db.get('devices').remove({ pin: +req.params.pin }).write()
 
-    // TODO get device from board?
-    res.json(device)
+    res.json(board.devices())
   })
 
   // change device status (by pin)
   app.post('/api/change-status', (req, res) => {
-    let device = db.get('devices').find({ pin: req.body.pin }).value()
+    const status = board.changeStatus(+req.body.pin)
 
-    // TODO verify this
-    if (!!!device) {
-      throw new Error('Device not found')
-    }
-
-    // TODO handle error
-    const status = board.changeStatus(req.body.pin)
-
-    // TODO get device from board?
     res.json({ status })
   })
 
@@ -181,9 +152,8 @@ export const server = () => {
       dependencies: [...db.get('dependencies').value(), dependency],
     }
 
-    const error = validateConfig(config)
-
-    if (error) {
+    const [valid, error] = board.validateConfig(config)
+    if (!valid) {
       throw new Error(error)
     }
 
@@ -191,41 +161,44 @@ export const server = () => {
 
     db.get('dependencies').push(dependency).write()
 
-    // TODO get dependency from board?
     res.json(dependency)
   })
 
   // get a dependency
   app.get('/api/dependencies/:pin', (req, res) => {
-    const device = db.get('devices').find({ pin: +req.params.pin }).value()
-
-    // TODO verify this
-    if (!!!device) {
-      throw new Error('Device for dependency not found')
-    }
+    const device = board.device(+req.params.pin)
 
     const directionTypes = board.availableTypesAndDirections()
     const direction = directionTypes[device.type]
 
+    let devicePins = []
     if (direction == 'in') {
-      return res.json(db.get('dependencies').find({ outputPin: req.params.pin }).value())
+      devicePins = db.get('dependencies').filter({ inputPin: device.pin }).map('outputPin').value()
+    } else {
+      devicePins = db.get('dependencies').filter({ outputPin: device.pin }).map('inputPin').value()
     }
 
-    res.json(db.get('dependencies').find({ inputPin: req.params.pin }).value())
+    const boardDevices = board.devices()
+    // @ts-ignore TS7006
+    const devices = devicePins.map(devicePin => boardDevices.find(boardDevice => boardDevice.pin === devicePin))
+
+    res.json({
+      direction,
+      devices,
+    })
   })
 
   // delete a dependency
-  app.delete('/api/dependencies/:inputpin/:outputpin', (req, res) => {
-    const dependency = db.get('dependencies').find({ inputPin: req.params.inputPin, outputPin: req.params.outputPin }).value()
+  app.delete('/api/dependencies/:inputPin/:outputPin', (req, res) => {
+    const dependency = db.get('dependencies').find({ inputPin: +req.params.inputPin, outputPin: +req.params.outputPin }).value()
 
-    // TODO verify this
     if (!!!dependency) {
       throw new Error('Dependency not found')
     }
 
-    db.get('dependencies').remove({ inputPin: req.params.inputPin, outputPin: req.params.outputPin }).write()
+    db.get('dependencies').remove({ inputPin: +req.params.inputPin, outputPin: +req.params.outputPin }).write()
 
-    res.json(dependency)
+    res.json(board.dependencies())
   })
 
   app.use((err: any, req: any, res: any, next: any) => {
