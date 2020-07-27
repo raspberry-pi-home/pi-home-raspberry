@@ -33,5 +33,12 @@ module.exports = (env, argv) => ({
       loader: 'babel-loader'
     }]
   },
-  plugins: plugins()
+  plugins: plugins(),
+  externals: {
+    epoll: {
+      commonjs: 'epoll',
+      commonjs2: 'epoll',
+      amd: 'epoll'
+    }
+  }
 });
