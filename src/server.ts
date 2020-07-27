@@ -182,10 +182,7 @@ export const server = () => {
     // @ts-ignore TS7006
     const devices = devicePins.map(devicePin => boardDevices.find(boardDevice => boardDevice.pin === devicePin))
 
-    res.json({
-      direction,
-      devices,
-    })
+    res.json(devices)
   })
 
   // delete a dependency
@@ -195,6 +192,21 @@ export const server = () => {
     if (!!!dependency) {
       throw new Error('Dependency not found')
     }
+
+    const config = {
+      devices: db.get('devices').value(),
+      // @ts-ignore TS7006
+      dependencies: db.get('dependencies').filter(dbDependency =>
+        !(dbDependency.inputPin === dependency.inputPin && dbDependency.outputPin === dependency.outputPin)
+      ).value(),
+    }
+
+    const [valid, error] = board.validateConfig(config)
+    if (!valid) {
+      throw new Error(error)
+    }
+
+    board.setConfig(config)
 
     db.get('dependencies').remove({ inputPin: +req.params.inputPin, outputPin: +req.params.outputPin }).write()
 
