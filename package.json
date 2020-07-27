@@ -43,6 +43,7 @@
     "@types/helmet": "0.0.47",
     "@types/lodash": "^4.14.158",
     "@types/morgan": "^1.9.1",
+    "epoll": "^4.0.0",
     "express": "^4.17.1",
     "helmet": "^3.23.0",
     "lodash": "^4.17.19",
