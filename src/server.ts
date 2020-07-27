@@ -31,6 +31,15 @@ export const server = () => {
     dependencies: db.get('dependencies').value(),
   })
 
+  const setConfig = (config: object) => {
+    const [valid, error] = board.validateConfig(config)
+    if (!valid) {
+      throw new Error(error)
+    }
+
+    board.setConfig(config)
+  }
+
   // routes setup
   app.get('/', (req, res) => {
     res.send('Welcome to raspberry-pi-home!')
@@ -54,12 +63,7 @@ export const server = () => {
       dependencies: db.get('dependencies').value(),
     }
 
-    const [valid, error] = board.validateConfig(config)
-    if (!valid) {
-      throw new Error(error)
-    }
-
-    board.setConfig(config)
+    setConfig(config)
 
     db.get('devices').push(device).write()
 
@@ -89,12 +93,7 @@ export const server = () => {
       dependencies: db.get('dependencies').value(),
     }
 
-    const [valid, error] = board.validateConfig(config)
-    if (!valid) {
-      throw new Error(error)
-    }
-
-    board.setConfig(config)
+    setConfig(config)
 
     db.get('devices')
       .find({ pin: device.pin })
@@ -116,12 +115,7 @@ export const server = () => {
       dependencies: db.get('dependencies').value(),
     }
 
-    const [valid, error] = board.validateConfig(config)
-    if (!valid) {
-      throw new Error(error)
-    }
-
-    board.setConfig(config)
+    setConfig(config)
 
     db.get('devices').remove({ pin: +req.params.pin }).write()
 
@@ -152,12 +146,7 @@ export const server = () => {
       dependencies: [...db.get('dependencies').value(), dependency],
     }
 
-    const [valid, error] = board.validateConfig(config)
-    if (!valid) {
-      throw new Error(error)
-    }
-
-    board.setConfig(config)
+    setConfig(config)
 
     db.get('dependencies').push(dependency).write()
 
@@ -201,12 +190,7 @@ export const server = () => {
       ).value(),
     }
 
-    const [valid, error] = board.validateConfig(config)
-    if (!valid) {
-      throw new Error(error)
-    }
-
-    board.setConfig(config)
+    setConfig(config)
 
     db.get('dependencies').remove({ inputPin: +req.params.inputPin, outputPin: +req.params.outputPin }).write()
 
