@@ -40,15 +40,3 @@ jobs:
     - name: npm run test
       if: startsWith(matrix.node-version, 10) || startsWith(matrix.node-version, 12) || startsWith(matrix.node-version, 14)
       run: npm run test
-
-    - name: push bundle
-      if: startsWith(matrix.node-version, 10)
-      uses: EndBug/add-and-commit@v4
-      with:
-        author_name: Gustavo Ingrassia
-        author_email: gustavo.ingrassia@gmail.com
-        message: "build app"
-        add: "lib"
-        force: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
