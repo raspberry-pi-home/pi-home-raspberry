@@ -1,6 +1,9 @@
+import os from 'os'
 import express from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
+import boxen from 'boxen'
+import chalk from 'chalk'
 import { Board } from 'pi-home-core'
 
 export const server = () => {
@@ -205,8 +208,40 @@ export const server = () => {
     res.status(500).send(err.message)
   })
 
-  app.listen(port, () =>
+  app.listen(port, () => {
+    const interfaces = os.networkInterfaces()
+
+    const getNetworkAddress = () => {
+      for (const name of Object.keys(interfaces)) {
+        // @ts-ignore TS2532
+        for (const localInterface of interfaces[name]) {
+          const { address, family, internal } = localInterface
+          if (family === 'IPv4' && !internal) {
+            return address
+          }
+        }
+      }
+    }
+
+    const localAddress = `http://localhost:${port}`
+    const networkAddress = getNetworkAddress()
+
+    let message = chalk.green('Server running!')
+
+    const prefix = networkAddress ? '- ' : ''
+    const space = networkAddress ? '            ' : '  '
+
+    message += `\n\n${chalk.bold(`${prefix}Local:`)}${space}${localAddress}`
+
+    if (networkAddress) {
+      message += `\n${chalk.bold('- On Your Network:')}  http://${networkAddress}:${port}`
+    }
+
     // eslint-disable-next-line no-console
-    console.log(`App running on http://localhost:${port}`)
-  )
+    console.log(boxen(message, {
+      padding: 1,
+      borderColor: 'green',
+      margin: 1,
+    }))
+  })
 }
