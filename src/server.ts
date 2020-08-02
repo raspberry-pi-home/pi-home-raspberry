@@ -11,7 +11,7 @@ import { api } from './api'
 export const server = () => {
   // app setup
   const app: express.Application = express()
-  const port: number = 3000
+  const port: number = 5000
 
   app.use(helmet())
   app.use(express.json())
