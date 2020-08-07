@@ -4,6 +4,7 @@ import helmet from 'helmet'
 import morgan from 'morgan'
 import boxen from 'boxen'
 import chalk from 'chalk'
+import cors from 'cors'
 import { Board } from 'pi-home-core'
 
 import { api } from './api'
@@ -14,6 +15,7 @@ export const server = () => {
   const port: number = 5000
 
   app.use(helmet())
+  app.use(cors())
   app.use(express.json())
   app.use(morgan('common'))
 

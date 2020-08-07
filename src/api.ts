@@ -15,7 +15,27 @@ export const api = (db, board) => {
 
   // list all devices
   router.get('/devices', (req, res) => {
-    res.json(board.devices())
+    const devices = board.devices()
+
+    if (req.query?.type === 'led' || req.query?.type === 'button') {
+      // @ts-ignore TS7006
+      return res.json(devices.filter(device => device.type && device.type.toLowerCase().endsWith(req.query.type)))
+    }
+
+    if (req.query?.type === 'configured') {
+      // @ts-ignore TS7006
+      return res.json(devices.filter(device => device.type))
+    } else if (req.query?.type === 'available') {
+      // @ts-ignore TS7006
+      const pins = devices.filter(device => !device.type).map(device => device.pin)
+
+      // @ts-ignore TS7006
+      const types = board.availableDeviceTypes.reduce((memo, type) => ({ ...memo, [type]: pins }), {})
+
+      return res.json(types)
+    }
+
+    res.json(devices)
   })
 
   // create a device
