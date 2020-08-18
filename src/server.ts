@@ -1,4 +1,7 @@
 import os from 'os'
+import fs from 'fs'
+import http  from 'http'
+import https from 'https'
 import express from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
@@ -9,10 +12,49 @@ import { Board } from 'pi-home-core'
 
 import { api } from './api'
 
+const serverHandler = (httpMode: string, port: number) => {
+  const interfaces = os.networkInterfaces()
+
+  const getNetworkAddress = () => {
+    for (const name of Object.keys(interfaces)) {
+      // @ts-ignore TS2532
+      for (const localInterface of interfaces[name]) {
+        const { address, family, internal } = localInterface
+        if (family === 'IPv4' && !internal) {
+          return address
+        }
+      }
+    }
+  }
+
+  const localAddress = `${httpMode}://localhost:${port}`
+  const networkAddress = getNetworkAddress()
+
+  let message = chalk.green('Server running!')
+
+  const prefix = networkAddress ? '- ' : ''
+  const space = networkAddress ? '            ' : '  '
+
+  message += `\n\n${chalk.bold(`${prefix}Local:`)}${space}${localAddress}`
+
+  if (networkAddress) {
+    message += `\n${chalk.bold('- On Your Network:')}  ${httpMode}://${networkAddress}:${port}`
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(boxen(message, {
+    padding: 1,
+    borderColor: 'green',
+    margin: 1,
+  }))
+}
+
 export const server = () => {
   // app setup
   const app: express.Application = express()
-  const port: number = 5000
+  const port: number = process.env.PORT ? +process.env.PORT : 5000
+
+  const httpMode: string = fs.existsSync('server.key') && fs.existsSync('server.cert') ? 'https' : 'http'
 
   app.use(helmet())
   app.use(cors())
@@ -54,40 +96,15 @@ export const server = () => {
     res.status(500).send(err.message)
   })
 
-  app.listen(port, () => {
-    const interfaces = os.networkInterfaces()
+  let server
+  if (httpMode === 'https') {
+    server = https.createServer({
+      key: fs.readFileSync('server.key'),
+      cert: fs.readFileSync('server.cert'),
+    }, app)
+  } else {
+    server = http.createServer({}, app)
+  }
 
-    const getNetworkAddress = () => {
-      for (const name of Object.keys(interfaces)) {
-        // @ts-ignore TS2532
-        for (const localInterface of interfaces[name]) {
-          const { address, family, internal } = localInterface
-          if (family === 'IPv4' && !internal) {
-            return address
-          }
-        }
-      }
-    }
-
-    const localAddress = `http://localhost:${port}`
-    const networkAddress = getNetworkAddress()
-
-    let message = chalk.green('Server running!')
-
-    const prefix = networkAddress ? '- ' : ''
-    const space = networkAddress ? '            ' : '  '
-
-    message += `\n\n${chalk.bold(`${prefix}Local:`)}${space}${localAddress}`
-
-    if (networkAddress) {
-      message += `\n${chalk.bold('- On Your Network:')}  http://${networkAddress}:${port}`
-    }
-
-    // eslint-disable-next-line no-console
-    console.log(boxen(message, {
-      padding: 1,
-      borderColor: 'green',
-      margin: 1,
-    }))
-  })
+  server.listen(port, () => serverHandler(httpMode, port))
 }
