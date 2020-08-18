@@ -53,7 +53,6 @@ export const server = () => {
   // app setup
   const app: express.Application = express()
   const port: number = process.env.PORT ? +process.env.PORT : 5000
-
   const httpMode: string = fs.existsSync('server.key') && fs.existsSync('server.cert') ? 'https' : 'http'
 
   app.use(helmet())
@@ -96,6 +95,7 @@ export const server = () => {
     res.status(500).send(err.message)
   })
 
+  // server bootstraping
   let server
   if (httpMode === 'https') {
     server = https.createServer({
