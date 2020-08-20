@@ -74,10 +74,10 @@ export const server = () => {
 
   // board setup
   const board = new Board()
-  board.setConfig({
-    devices: db.get('devices').value(),
-    dependencies: db.get('dependencies').value(),
-  })
+  // @ts-ignore TS7006
+  db.get('devices').value().forEach(device => board.addDevice(device))
+  // @ts-ignore TS7006
+  db.get('dependencies').value().forEach(dependency => board.linkDevices({ inputPin: dependency.inputPin, outputPin: dependency.outputPin }))
 
   // routes setup
   app.get('/', (req, res) => {
