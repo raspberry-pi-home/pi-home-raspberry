@@ -16,6 +16,11 @@ export const api = (db, board) => {
     res.json(devices)
   })
 
+  // change device status (by pin)
+  router.post('/devices/change-status', (req, res) => {
+    res.json({ status: board.changeDeviceStatus(+req.body.pin) })
+  })
+
   // list all available devices
   router.get('/devices/available', (req, res) => {
     res.json(board.getAvailableDevices())
@@ -60,11 +65,6 @@ export const api = (db, board) => {
     db.get('devices').remove({ pin: +req.params.pin }).write()
 
     res.json(board.getDevices())
-  })
-
-  // change device status (by pin)
-  router.post('/change-status', (req, res) => {
-    res.json({ status: board.changeDeviceStatus(+req.body.pin) })
   })
 
   // link an input device to an output device
