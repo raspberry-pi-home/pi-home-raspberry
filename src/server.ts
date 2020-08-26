@@ -52,8 +52,8 @@ const serverHandler = (httpMode: string, port: number) => {
 export const server = () => {
   // app setup
   const app: express.Application = express()
-  const port: number = process.env.PORT ? +process.env.PORT : 5000
-  const httpMode: string = fs.existsSync('server.key') && fs.existsSync('server.cert') ? 'https' : 'http'
+  const httpPort: number = process.env.PORT ? +process.env.PORT : 5000
+  const httpsPort: number = process.env.HTTPS_PORT ? +process.env.HTTPS_PORT : 5001
 
   app.use(helmet())
   app.use(cors())
@@ -96,15 +96,16 @@ export const server = () => {
   })
 
   // server bootstraping
-  let server
-  if (httpMode === 'https') {
-    server = https.createServer({
-      key: fs.readFileSync('server.key'),
-      cert: fs.readFileSync('server.cert'),
-    }, app)
-  } else {
-    server = http.createServer({}, app)
-  }
+  http
+    .createServer({}, app)
+    .listen(httpPort, () => serverHandler('http', httpPort))
 
-  server.listen(port, () => serverHandler(httpMode, port))
+  if (fs.existsSync('server.key') && fs.existsSync('server.cert')) {
+    https
+      .createServer({
+        key: fs.readFileSync('server.key'),
+        cert: fs.readFileSync('server.cert'),
+      }, app)
+      .listen(httpsPort, () => serverHandler('https', httpsPort))
+  }
 }
