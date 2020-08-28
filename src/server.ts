@@ -8,9 +8,15 @@ import morgan from 'morgan'
 import boxen from 'boxen'
 import chalk from 'chalk'
 import cors from 'cors'
+import socketio from 'socket.io'
 import { Board } from 'pi-home-core'
 
 import { api } from './api'
+
+interface Socket {
+  on(event: string, callback: (data: any) => void): void
+  emit(event: string, data: any): void
+}
 
 const serverHandler = (httpMode: string, port: number) => {
   const interfaces = os.networkInterfaces()
@@ -50,15 +56,24 @@ const serverHandler = (httpMode: string, port: number) => {
 }
 
 export const server = () => {
-  // app setup
+  // express app setup
   const app: express.Application = express()
-  const httpPort: number = process.env.PORT ? +process.env.PORT : 5000
-  const httpsPort: number = process.env.HTTPS_PORT ? +process.env.HTTPS_PORT : 5001
-
   app.use(helmet())
   app.use(cors())
   app.use(express.json())
   app.use(morgan('common'))
+
+  // server setup
+  const port: number = process.env.PORT ? +process.env.PORT : 5000
+  let httpMode: string = 'http'
+
+  let server = http.createServer({}, app)
+  if (process.env.SECURE === 'true' && fs.existsSync('server.key') && fs.existsSync('server.cert')) {
+    httpMode = 'https'
+    server = https.createServer({ key: fs.readFileSync('server.key'), cert: fs.readFileSync('server.cert') }, app)
+  }
+
+  const socket: Socket = socketio(server, { serveClient: false })
 
   // db setup
   const lowdb = require('lowdb')
@@ -95,17 +110,6 @@ export const server = () => {
     res.status(500).send(err.message)
   })
 
-  // server bootstraping
-  http
-    .createServer({}, app)
-    .listen(httpPort, () => serverHandler('http', httpPort))
-
-  if (fs.existsSync('server.key') && fs.existsSync('server.cert')) {
-    https
-      .createServer({
-        key: fs.readFileSync('server.key'),
-        cert: fs.readFileSync('server.cert'),
-      }, app)
-      .listen(httpsPort, () => serverHandler('https', httpsPort))
-  }
+  // server start-up
+  server.listen(port, () => serverHandler(httpMode, port))
 }
