@@ -100,7 +100,7 @@ export const server = () => {
   })
 
   // /api router
-  app.use('/api', api(db, board))
+  app.use('/api', api(db, board, socket))
 
   app.use((err: any, req: any, res: any, next: any) => {
     if (process.env.DEBUG) {
