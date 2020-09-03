@@ -13,11 +13,6 @@ import { Board } from 'pi-home-core'
 
 import { api } from './api'
 
-interface Socket {
-  on(event: string, callback: (data: any) => void): void
-  emit(event: string, data: any): void
-}
-
 const serverHandler = (httpMode: string, port: number) => {
   const interfaces = os.networkInterfaces()
 
@@ -73,7 +68,7 @@ export const server = () => {
     server = https.createServer({ key: fs.readFileSync('server.key'), cert: fs.readFileSync('server.cert') }, app)
   }
 
-  const socket: Socket = socketio(server, { serveClient: false })
+  const socket = socketio(server, { serveClient: false })
 
   // db setup
   const lowdb = require('lowdb')
@@ -94,13 +89,19 @@ export const server = () => {
   // @ts-ignore TS7006
   db.get('dependencies').value().forEach(dependency => board.linkDevices({ inputPin: dependency.inputPin, outputPin: dependency.outputPin }))
 
+  // socket
+  board.on('all', (eventName: string, data: object) => {
+    socket?.sockets?.emit(eventName, data)
+    socket?.sockets?.emit('all', eventName, data)
+  })
+
   // routes setup
   app.get('/', (req, res) => {
     res.send('Welcome to raspberry-pi-home!')
   })
 
   // /api router
-  app.use('/api', api(db, board, socket))
+  app.use('/api', api(db, board))
 
   app.use((err: any, req: any, res: any, next: any) => {
     if (process.env.DEBUG) {

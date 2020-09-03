@@ -1,7 +1,7 @@
 import express from 'express'
 
 // @ts-ignore TS7006
-export const api = (db, board, socket) => {
+export const api = (db, board) => {
   const router = express.Router()
 
   // list all devices
@@ -20,9 +20,6 @@ export const api = (db, board, socket) => {
   router.post('/devices/change-status', (req, res) => {
     const pin = +req.body.pin
     const status = board.changeDeviceStatus(pin)
-
-    // TODO: improve this
-    socket.sockets.emit('changeDeviceStatus', { pin, status })
 
     res.json({ status })
   })
