@@ -2,7 +2,7 @@ import os from 'os'
 import fs from 'fs'
 import http  from 'http'
 import https from 'https'
-import express from 'express'
+import express, { Request, Response } from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import boxen from 'boxen'
@@ -59,16 +59,21 @@ export const server = () => {
   app.use(morgan('common'))
 
   // server setup
-  const port: number = process.env.PORT ? +process.env.PORT : 5000
-  let httpMode: string = 'http'
+  const httpPort: number = process.env.PORT ? +process.env.PORT : 5000
+  const httpsPort: number = process.env.HTTPS_PORT ? +process.env.HTTPS_PORT : 5001
 
-  let server = http.createServer({}, app)
-  if (process.env.SECURE === 'true' && fs.existsSync('server.key') && fs.existsSync('server.cert')) {
-    httpMode = 'https'
-    server = https.createServer({ key: fs.readFileSync('server.key'), cert: fs.readFileSync('server.cert') }, app)
+  const httpServer = http.createServer({}, app)
+  let httpsServer = null
+  if (fs.existsSync('server.key') && fs.existsSync('server.cert')) {
+    httpsServer = https.createServer({ key: fs.readFileSync('server.key'), cert: fs.readFileSync('server.cert') }, app)
   }
 
-  const socket = socketio(server, { serveClient: false })
+  const httpSocket = socketio(httpServer, { serveClient: false })
+  // @ts-ignore TS7034
+  let httpsSocket = null
+  if (httpsServer) {
+    httpsSocket = socketio(httpsServer, { serveClient: false })
+  }
 
   // db setup
   const lowdb = require('lowdb')
@@ -91,12 +96,20 @@ export const server = () => {
 
   // socket
   board.on('all', (eventName: string, data: object) => {
-    socket?.sockets?.emit(eventName, data)
-    socket?.sockets?.emit('all', eventName, data)
+    httpSocket.sockets?.emit(eventName, data)
+    httpSocket.sockets?.emit('all', eventName, data)
+
+    // @ts-ignore TS7005
+    if (httpsSocket) {
+      // @ts-ignore TS7005
+      httpsSocket.sockets?.emit(eventName, data)
+      // @ts-ignore TS7005
+      httpsSocket.sockets?.emit('all', eventName, data)
+    }
   })
 
   // routes setup
-  app.get('/', (req, res) => {
+  app.get('/', (req: Request, res: Response) => {
     res.send('Welcome to raspberry-pi-home!')
   })
 
@@ -112,5 +125,9 @@ export const server = () => {
   })
 
   // server start-up
-  server.listen(port, () => serverHandler(httpMode, port))
+  httpServer.listen(httpPort, () => serverHandler('http', httpPort))
+
+  if (httpsServer) {
+    httpsServer.listen(httpsPort, () => serverHandler('https', httpsPort))
+  }
 }
