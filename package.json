@@ -52,7 +52,7 @@
     "helmet": "^3.23.0",
     "lowdb": "^1.0.0",
     "morgan": "^1.10.0",
-    "pi-home-core": "git+https://github.com/raspberry-pi-home/pi-home-core.git",
+    "pi-home-core": "git+https://github.com/raspberry-pi-home/pi-home-core.git#1.1.0",
     "socket.io": "^2.3.0"
   },
   "scripts": {
